@@ -79,7 +79,9 @@ function render() {
   const admin = admins[state.clinic];
   $("#clinicSelect").value = state.clinic;
   $("#clinicCode").textContent = state.clinic;
-  $("#briefingIntro").textContent = `Daftar prioritas hari ini sudah disusun untuk tim ${current.name}.`;
+  const outstandingChats = tasks().filter((task) => task.reasonType === "overdue" && !isDone(task)).length;
+  $("#heroTitle").textContent = outstandingChats ? `${outstandingChats} chat pelanggan menunggu balasan.` : "Chat tertunda sudah selesai.";
+  $("#briefingIntro").textContent = outstandingChats ? `Tim ${current.name} mengerjakan pesan tertunda lebih dulu, lalu mengikuti urutan di bawah.` : `Tim ${current.name} dapat melanjutkan aftercare dan follow-up terjadwal.`;
   $("#adminName").textContent = `${admin.name} · ${current.name}`;
   $("#adminGreeting").textContent = admin.greeting;
   $("#adminPortrait").style.setProperty("--portrait-bg", admin.color);
@@ -117,7 +119,7 @@ function adminAnswer(question) {
   const matchingCustomer = all.find((t) => q.includes(t.name.toLowerCase().replace(".", "")) || q.includes(t.name.toLowerCase()));
   if (matchingCustomer) return `${matchingCustomer.name} dijadwalkan untuk “${matchingCustomer.reason}”. ${matchingCustomer.detail}. Status saat ini: ${isDone(matchingCustomer) ? outcomeLabels[matchingCustomer.outcome] : "belum dikerjakan"}.`;
   if (q.includes("prioritas") || q.includes("kerjakan") || q.includes("mulai")) return `Mulai dari ${overdue.length} chat yang belum dibalas. Setelah itu lanjutkan aftercare, pelanggan berisiko, lalu peluang paket dan ulang tahun. Total tugas tersisa: ${pending.length}.`;
-  if (q.includes("chat") || q.includes("balas") || q.includes("inbox")) return overdue.length ? `Ada ${overdue.length} chat yang masuk antara pukul 20.00–10.00 dan belum dibalas. Yang pertama adalah ${overdue[0].name}: ${overdue[0].detail}.` : "Semua chat prioritas sudah dibalas. Tim bisa melanjutkan follow-up terjadwal.";
+  if (q.includes("chat") || q.includes("balas") || q.includes("inbox")) return overdue.length ? `Ada ${overdue.length} chat yang masuk antara pukul 20.00 sampai 10.00 dan belum dibalas. Yang pertama adalah ${overdue[0].name}: ${overdue[0].detail}.` : "Semua chat prioritas sudah dibalas. Tim bisa melanjutkan follow-up terjadwal.";
   if (q.includes("pertama") || q.includes("siapa")) return first ? `Pelanggan pertama yang perlu ditangani adalah ${first.name}. Alasannya: ${first.reason.toLowerCase()} — ${first.detail}.` : "Semua tugas hari ini sudah selesai.";
   if (q.includes("progres") || q.includes("selesai") || q.includes("sisa")) return `${all.length - pending.length} dari 20 tugas sudah selesai. Masih ada ${pending.length} tugas untuk tim ${state.clinic}.`;
   if (q.includes("tidak respon") || q.includes("no response")) return "Catat hasil sebagai “Tidak merespons”. Pelanggan tersebut akan dilewati sementara dan tidak masuk daftar berikutnya selama masa cooldown.";
@@ -139,6 +141,7 @@ function openChat() {
   $("#chatPanel").classList.add("open");
   $("#chatBackdrop").classList.add("open");
   $("#chatPanel").setAttribute("aria-hidden", "false");
+  $("#chatPanel").removeAttribute("inert");
   setTimeout(() => $("#chatInput").focus(), 200);
 }
 
@@ -146,6 +149,7 @@ function closeChat() {
   $("#chatPanel").classList.remove("open");
   $("#chatBackdrop").classList.remove("open");
   $("#chatPanel").setAttribute("aria-hidden", "true");
+  $("#chatPanel").setAttribute("inert", "");
 }
 
 function renderMetrics() {
@@ -168,7 +172,11 @@ function getVisibleTasks() {
   if (state.filter === "done") return all.filter(isDone);
   if (state.filter === "overdue") return all.filter((t) => t.reasonType === "overdue" && !isDone(t));
   if (state.filter === "followup") return all.filter((t) => t.reasonType !== "overdue" && !isDone(t));
-  return [...all].sort((a, b) => Number(isDone(a)) - Number(isDone(b)));
+  return [...all].sort((a, b) => {
+    const doneOrder = Number(isDone(a)) - Number(isDone(b));
+    if (doneOrder) return doneOrder;
+    return Number(b.reasonType === "overdue") - Number(a.reasonType === "overdue");
+  });
 }
 
 function taskCard(task, rank) {
@@ -260,12 +268,14 @@ $("#menuButton").addEventListener("click", () => $(".sidebar").classList.toggle(
 $("#askAdminButton").addEventListener("click", openChat);
 $("#closeChatButton").addEventListener("click", closeChat);
 $("#chatBackdrop").addEventListener("click", closeChat);
+document.addEventListener("keydown", (event) => { if (event.key === "Escape" && $("#chatPanel").classList.contains("open")) closeChat(); });
 $("#chatForm").addEventListener("submit", (event) => { event.preventDefault(); sendQuestion($("#chatInput").value); $("#chatInput").value = ""; });
 $("#quickQuestions").addEventListener("click", (event) => { const button = event.target.closest("[data-question]"); if (button) sendQuestion(button.dataset.question); });
-$("#startButton").addEventListener("click", () => { const first = tasks().find((t) => !isDone(t)); if (first) { document.querySelector(`[data-id="${first.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => openOutcome(first.id), 350); } else toast("Semua tugas hari ini selesai"); });
+$("#startButton").addEventListener("click", () => { const first = tasks().find((t) => t.reasonType === "overdue" && !isDone(t)) || tasks().find((t) => !isDone(t)); if (first) { document.querySelector(`[data-id="${first.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => openOutcome(first.id), 350); } else toast("Semua tugas hari ini selesai"); });
 $("#copyBriefingButton").addEventListener("click", async () => { await navigator.clipboard.writeText(makeBriefingText()); toast("Briefing berhasil disalin"); });
 $("#resetButton").addEventListener("click", () => { state.data = makeData(); state.history = []; save(); render(); toast("Data contoh direset"); });
 $$('[data-outcome]').forEach((button) => button.addEventListener("click", () => recordOutcome(button.dataset.outcome)));
 
 $("#todayLabel").textContent = new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
+$("#briefingDate").textContent = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long" }).format(new Date());
 render();
