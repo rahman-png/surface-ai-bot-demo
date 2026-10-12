@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#18332c" />
+    <title>Surface Daily — Customer Book</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="Surface Daily">
+          <span class="brand-mark">S</span>
+          <span><strong>Surface</strong><small>Customer Book</small></span>
+        </a>
+
+        <nav class="nav" aria-label="Navigasi utama">
+          <button class="nav-item active" data-view="briefing"><span>☀</span> Briefing pagi</button>
+          <button class="nav-item" data-view="customers"><span>◇</span> Pelanggan</button>
+          <button class="nav-item" data-view="inbox"><span>↗</span> Kotak masuk <b id="navInboxCount">0</b></button>
+          <button class="nav-item" data-view="history"><span>✓</span> Riwayat hari ini</button>
+        </nav>
+
+        <div class="sidebar-note">
+          <span class="pulse"></span>
+          <div><strong>Data lokal</strong><small>Belum terhubung ke Supabase</small></div>
+        </div>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <button class="menu-button" id="menuButton" aria-label="Buka menu">☰</button>
+          <div class="clinic-switcher">
+            <label for="clinicSelect">Klinik aktif</label>
+            <select id="clinicSelect">
+              <option value="SB">Setiabudi</option>
+              <option value="CITOS">Cilandak Town Square</option>
+              <option value="LMP">Lippo Mall Puri</option>
+              <option value="TSM">Trans Studio Mall Cibubur</option>
+            </select>
+          </div>
+          <div class="today" id="todayLabel"></div>
+          <button class="avatar" title="Profil pengguna">NA</button>
+        </header>
+
+        <div class="content">
+          <section id="briefingView" class="view active">
+            <section class="admin-strip" aria-label="Admin virtual klinik">
+              <div class="admin-portrait" id="adminPortrait" aria-hidden="true"><span>👩🏻‍💼</span></div>
+              <div class="admin-intro">
+                <span class="online-label"><i></i> Admin virtual aktif</span>
+                <strong id="adminName">Rani · Setiabudi</strong>
+                <p id="adminGreeting">Saya siap membantu membaca prioritas Customer Book hari ini.</p>
+              </div>
+              <button class="ask-admin-button" id="askAdminButton">Tanya admin <span>→</span></button>
+            </section>
+
+            <div class="hero">
+              <div class="hero-copy">
+                <span class="eyebrow">Morning briefing · <span id="clinicCode">SB</span></span>
+                <h1>Mulai hari dengan<br><em>percakapan yang tepat.</em></h1>
+                <p id="briefingIntro">Daftar prioritas hari ini sudah disusun untuk tim Setiabudi.</p>
+                <div class="hero-actions">
+                  <button class="primary" id="startButton">Mulai dari prioritas pertama</button>
+                  <button class="secondary" id="copyBriefingButton">Salin briefing chat</button>
+                </div>
+              </div>
+              <div class="progress-card" aria-label="Progres follow-up hari ini">
+                <div class="progress-ring" id="progressRing"><span><strong id="doneCount">0</strong><small>dari 20</small></span></div>
+                <p><strong id="remainingCount">20 tugas tersisa</strong><small>Target harian klinik</small></p>
+              </div>
+            </div>
+
+            <div class="metric-grid">
+              <article class="metric urgent"><span>Perlu dibalas</span><strong id="overdueCount">0</strong><small>Chat masuk 20.00–10.00</small></article>
+              <article class="metric"><span>Berisiko pergi</span><strong id="riskCount">0</strong><small>Lama tidak kembali</small></article>
+              <article class="metric"><span>Aftercare</span><strong id="aftercareCount">0</strong><small>Cek kondisi pelanggan</small></article>
+              <article class="metric"><span>Peluang hari ini</span><strong id="opportunityCount">0</strong><small>Ulang tahun & paket</small></article>
+            </div>
+
+            <section class="queue-section">
+              <div class="section-heading">
+                <div><span class="eyebrow">Urutan kerja</span><h2>Daftar prioritas hari ini</h2></div>
+                <div class="filters" id="filters">
+                  <button class="active" data-filter="all">Semua</button>
+                  <button data-filter="overdue">Belum dibalas</button>
+                  <button data-filter="followup">Follow-up</button>
+                  <button data-filter="done">Selesai</button>
+                </div>
+              </div>
+              <div id="taskList" class="task-list"></div>
+            </section>
+          </section>
+
+          <section id="customersView" class="view simple-view">
+            <div class="section-heading"><div><span class="eyebrow">Direktori</span><h1>Pelanggan klinik</h1></div><input id="customerSearch" class="search" type="search" placeholder="Cari nama atau nomor…" /></div>
+            <div class="table-card"><table><thead><tr><th>Pelanggan</th><th>Kunjungan terakhir</th><th>Status</th><th>Kontak berikutnya</th></tr></thead><tbody id="customerTable"></tbody></table></div>
+          </section>
+
+          <section id="inboxView" class="view simple-view">
+            <div class="section-heading"><div><span class="eyebrow">Respons cepat</span><h1>Chat belum dibalas</h1></div></div>
+            <div class="callout"><strong>Aturan prioritas</strong><p>Pesan pelanggan yang masuk antara pukul 20.00 kemarin hingga 10.00 hari ini ditempatkan paling atas dan ikut dihitung dalam batas 20 tugas.</p></div>
+            <div id="inboxList" class="task-list"></div>
+          </section>
+
+          <section id="historyView" class="view simple-view">
+            <div class="section-heading"><div><span class="eyebrow">Aktivitas tim</span><h1>Riwayat hari ini</h1></div><button class="secondary" id="resetButton">Reset data contoh</button></div>
+            <div id="historyList" class="history-list"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <aside class="chat-panel" id="chatPanel" aria-label="Percakapan dengan admin virtual" aria-hidden="true">
+      <header class="chat-header">
+        <div class="admin-portrait small" id="chatAdminPortrait" aria-hidden="true"><span>👩🏻‍💼</span></div>
+        <div><small>Admin virtual</small><strong id="chatAdminName">Rani · Setiabudi</strong><span><i></i> Online</span></div>
+        <button id="closeChatButton" aria-label="Tutup percakapan">×</button>
+      </header>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="quick-questions" id="quickQuestions">
+        <button data-question="Apa prioritas hari ini?">Prioritas hari ini</button>
+        <button data-question="Berapa chat belum dibalas?">Chat belum dibalas</button>
+        <button data-question="Siapa pelanggan pertama?">Pelanggan pertama</button>
+      </div>
+      <form class="chat-form" id="chatForm">
+        <label class="sr-only" for="chatInput">Tulis pertanyaan</label>
+        <input id="chatInput" autocomplete="off" placeholder="Tanyakan data klinik…" />
+        <button type="submit" aria-label="Kirim pertanyaan">Kirim</button>
+      </form>
+      <small class="chat-note">Demo lokal · jawaban berasal dari data Customer Book</small>
+    </aside>
+    <div class="chat-backdrop" id="chatBackdrop"></div>
+    <dialog id="actionDialog">
+      <form method="dialog">
+        <button class="dialog-close" value="cancel" aria-label="Tutup">×</button>
+        <span class="eyebrow">Catat hasil</span>
+        <h2 id="dialogCustomer">Pelanggan</h2>
+        <p>Pilih hasil percakapan agar daftar besok dapat disusun dengan benar.</p>
+        <div class="outcome-grid">
+          <button value="replied" data-outcome="replied">Sudah membalas</button>
+          <button value="booked" data-outcome="booked">Berhasil booking</button>
+          <button value="no_response" data-outcome="no_response">Tidak merespons</button>
+          <button value="later" data-outcome="later">Follow-up nanti</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
