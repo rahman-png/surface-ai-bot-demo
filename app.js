@@ -209,11 +209,26 @@ function renderHistory() {
   $("#historyList").innerHTML = today.length ? today.map((item) => `<div class="history-row"><span class="history-dot"></span><div><strong>${item.name}</strong><small> · ${outcomeLabels[item.outcome]}</small></div><time>${item.time}</time></div>`).join("") : `<div class="empty">Belum ada aktivitas yang dicatat untuk klinik ini.</div>`;
 }
 
+function closeMobileMenu() {
+  $(".sidebar").classList.remove("open");
+  $("#sidebarBackdrop").classList.remove("open");
+  $("#menuButton").setAttribute("aria-expanded", "false");
+  document.body.classList.remove("menu-open");
+}
+
+function toggleMobileMenu() {
+  const willOpen = !$(".sidebar").classList.contains("open");
+  $(".sidebar").classList.toggle("open", willOpen);
+  $("#sidebarBackdrop").classList.toggle("open", willOpen);
+  $("#menuButton").setAttribute("aria-expanded", String(willOpen));
+  document.body.classList.toggle("menu-open", willOpen);
+}
+
 function switchView(view) {
   $$(".nav-item").forEach((el) => el.classList.toggle("active", el.dataset.view === view));
   $$(".view").forEach((el) => el.classList.remove("active"));
   $(`#${view}View`).classList.add("active");
-  $(".sidebar").classList.remove("open");
+  closeMobileMenu();
 }
 
 function openOutcome(id) {
@@ -264,11 +279,16 @@ document.addEventListener("click", (event) => {
 
 $("#clinicSelect").addEventListener("change", (event) => { state.clinic = event.target.value; save(); render(); });
 $("#customerSearch").addEventListener("input", (event) => renderCustomers(event.target.value));
-$("#menuButton").addEventListener("click", () => $(".sidebar").classList.toggle("open"));
+$("#menuButton").addEventListener("click", toggleMobileMenu);
+$("#sidebarBackdrop").addEventListener("click", closeMobileMenu);
 $("#askAdminButton").addEventListener("click", openChat);
 $("#closeChatButton").addEventListener("click", closeChat);
 $("#chatBackdrop").addEventListener("click", closeChat);
-document.addEventListener("keydown", (event) => { if (event.key === "Escape" && $("#chatPanel").classList.contains("open")) closeChat(); });
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if ($("#chatPanel").classList.contains("open")) closeChat();
+  if ($(".sidebar").classList.contains("open")) closeMobileMenu();
+});
 $("#chatForm").addEventListener("submit", (event) => { event.preventDefault(); sendQuestion($("#chatInput").value); $("#chatInput").value = ""; });
 $("#quickQuestions").addEventListener("click", (event) => { const button = event.target.closest("[data-question]"); if (button) sendQuestion(button.dataset.question); });
 $("#startButton").addEventListener("click", () => { const first = tasks().find((t) => t.reasonType === "overdue" && !isDone(t)) || tasks().find((t) => !isDone(t)); if (first) { document.querySelector(`[data-id="${first.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => openOutcome(first.id), 350); } else toast("Semua tugas hari ini selesai"); });
