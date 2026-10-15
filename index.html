@@ -4,30 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#18332c" />
-    <title>Surface Daily — Customer Book</title>
+    <title>Surface Daily — Briefing Tim</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=20261012-2" />
+    <link rel="stylesheet" href="styles.css?v=20261015-4" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar">
         <a class="brand" href="#" aria-label="Surface Daily">
           <span class="brand-mark">S</span>
-          <span><strong>Surface</strong><small>Customer Book</small></span>
+          <span><strong>Surface</strong><small>Daily briefing</small></span>
         </a>
 
         <nav class="nav" aria-label="Navigasi utama">
           <button class="nav-item active" data-view="briefing"><span>01</span> Briefing pagi</button>
-          <button class="nav-item" data-view="customers"><span>02</span> Pelanggan</button>
-          <button class="nav-item" data-view="inbox"><span>03</span> Kotak masuk <b id="navInboxCount">0</b></button>
-          <button class="nav-item" data-view="history"><span>04</span> Riwayat hari ini</button>
+          <button class="nav-item" data-view="customers"><span>02</span> Daftar tugas</button>
+          <button class="nav-item" data-view="inbox"><span>03</span> Prioritas utama <b id="navInboxCount">0</b></button>
+          <button class="nav-item" data-view="history"><span>04</span> Aktivitas</button>
+          <button class="nav-item" data-view="send"><span>05</span> Kirim briefing</button>
         </nav>
 
-        <div class="sidebar-note">
+        <div class="sidebar-note" id="dataStatus">
           <span class="pulse"></span>
-          <div><strong>Data lokal</strong><small>Belum terhubung ke Supabase</small></div>
+          <div><strong>Data contoh</strong><small>Backendv2 & WooBlazz belum terhubung</small></div>
         </div>
       </aside>
       <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
@@ -36,8 +37,9 @@
         <header class="topbar">
           <button class="menu-button" id="menuButton" aria-label="Buka menu" aria-expanded="false">☰</button>
           <div class="clinic-switcher">
-            <label for="clinicSelect">Klinik aktif</label>
+            <label for="clinicSelect">Briefing untuk</label>
             <select id="clinicSelect">
+              <option value="CS">CS pusat · semua klinik</option>
               <option value="SB">Setiabudi</option>
               <option value="CITOS">Cilandak Town Square</option>
               <option value="LMP">Lippo Mall Puri</option>
@@ -45,7 +47,7 @@
             </select>
           </div>
           <div class="today" id="todayLabel"></div>
-          <button class="avatar" title="Profil pengguna">NA</button>
+          <span class="demo-pill" id="modePill">DEMO LOKAL</span>
         </header>
 
         <div class="content">
@@ -53,42 +55,48 @@
             <section class="admin-strip" aria-label="Admin virtual klinik">
               <div class="admin-portrait" id="adminPortrait" aria-hidden="true"><span>👩🏻‍💼</span></div>
               <div class="admin-intro">
-                <span class="online-label"><i></i> Admin virtual aktif</span>
+                <span class="online-label" id="guideLabel"><i></i> Pemandu briefing demo</span>
                 <strong id="adminName">Rani · Setiabudi</strong>
-                <p id="adminGreeting">Saya siap membantu membaca prioritas Customer Book hari ini.</p>
+                <p id="adminGreeting">Saya siap membantu membaca prioritas hari ini.</p>
               </div>
               <button class="ask-admin-button" id="askAdminButton">Tanya admin <span>→</span></button>
             </section>
 
             <div class="hero">
               <div class="hero-copy">
-                <span class="eyebrow">Briefing <span id="clinicCode">SB</span> · <span id="briefingDate">Hari ini</span></span>
+                <span class="eyebrow">Briefing <span id="clinicCode">CS</span> · <span id="briefingDate">Hari ini</span></span>
                 <h1 id="heroTitle">Ada chat pelanggan yang menunggu balasan.</h1>
                 <p id="briefingIntro">Balas pesan yang tertunda, lalu lanjutkan follow-up sesuai urutan.</p>
                 <div class="hero-actions">
                   <button class="primary" id="startButton">Buka tugas pertama</button>
-                  <button class="secondary" id="copyBriefingButton">Salin untuk grup tim</button>
+                  <button class="secondary" id="copyBriefingButton">Salin briefing dan tautan</button>
+                  <button class="secondary" id="refreshDataButton" hidden>Perbarui data</button>
                 </div>
               </div>
               <div class="progress-card" aria-label="Progres follow-up hari ini">
-                <div class="progress-ring" id="progressRing"><span><strong id="doneCount">0</strong><small>dari 20</small></span></div>
-                <p><strong id="remainingCount">20 tugas tersisa</strong><small>Daftar kerja klinik hari ini</small></p>
+                <div class="progress-ring" id="progressRing"><span><strong id="doneCount">0</strong><small id="totalCount">dari 0</small></span></div>
+                <p><strong id="remainingCount">0 tugas tersisa</strong><small>Maksimal 20 tugas per hari</small></p>
               </div>
             </div>
 
             <div class="metric-grid">
-              <article class="metric urgent"><span>Chat tertunda</span><strong id="overdueCount">0</strong><small>Masuk 20.00 sampai 10.00</small></article>
-              <article class="metric"><span>Perlu kembali</span><strong id="riskCount">0</strong><small>Lama tidak berkunjung</small></article>
-              <article class="metric"><span>Aftercare</span><strong id="aftercareCount">0</strong><small>Cek kondisi treatment</small></article>
-              <article class="metric"><span>Paket dan ulang tahun</span><strong id="opportunityCount">0</strong><small>Peluang yang relevan hari ini</small></article>
+              <article class="metric urgent"><span id="metricOneLabel">Chat tertunda</span><strong id="overdueCount">0</strong><small id="metricOneHelp">22.00 kemarin–09.00 hari ini</small></article>
+              <article class="metric"><span id="metricTwoLabel">Gold & Platinum</span><strong id="riskCount">0</strong><small id="metricTwoHelp">Lama tidak treatment</small></article>
+              <article class="metric"><span id="metricThreeLabel">Sisa paket</span><strong id="aftercareCount">0</strong><small id="metricThreeHelp">Kredit belum dipakai</small></article>
+              <article class="metric"><span id="metricFourLabel">Selesai</span><strong id="opportunityCount">0</strong><small id="metricFourHelp">Hasil dicatat hari ini</small></article>
             </div>
+
+            <section class="briefing-preview" aria-labelledby="previewHeading">
+              <div class="section-heading"><div><span class="eyebrow">Siap disalin ke WhatsApp tim</span><h2 id="previewHeading">Pesan briefing</h2></div></div>
+              <div id="briefingPreview" class="briefing-paper"></div>
+            </section>
 
             <section class="queue-section">
               <div class="section-heading">
-                <div><span class="eyebrow">Maksimal 20 pelanggan</span><h2>Urutan kerja hari ini</h2></div>
+                <div><span class="eyebrow">Maksimal 20 tugas · boleh lebih sedikit</span><h2>Urutan kerja hari ini</h2></div>
                 <div class="filters" id="filters">
                   <button class="active" data-filter="all">Semua</button>
-                  <button data-filter="overdue">Belum dibalas</button>
+                  <button data-filter="overdue">Prioritas utama</button>
                   <button data-filter="followup">Follow-up</button>
                   <button data-filter="done">Selesai</button>
                 </div>
@@ -98,19 +106,48 @@
           </section>
 
           <section id="customersView" class="view simple-view">
-            <div class="section-heading"><div><span class="eyebrow">Direktori</span><h1>Pelanggan klinik</h1></div><input id="customerSearch" class="search" type="search" placeholder="Cari nama atau nomor…" /></div>
-            <div class="table-card"><table><thead><tr><th>Pelanggan</th><th>Kunjungan terakhir</th><th>Status</th><th>Kontak berikutnya</th></tr></thead><tbody id="customerTable"></tbody></table></div>
+            <div class="section-heading"><div><span class="eyebrow">Daftar kerja</span><h1>Tugas pelanggan</h1></div><input id="customerSearch" class="search" type="search" placeholder="Cari nama atau tugas…" /></div>
+            <div id="customerTable" class="task-list"></div>
+            <section class="backend-lookup" id="backendLookup" hidden>
+              <div class="section-heading"><div><span class="eyebrow">Backendv2 · mode baca</span><h2>Cari pelanggan</h2></div></div>
+              <p>Cari berdasarkan nama atau kode pelanggan untuk melihat tier, treatment terakhir yang terkonfirmasi, dan sisa paket. Hasil pencarian dibatasi 25 pelanggan.</p>
+              <form id="backendSearchForm" class="backend-search"><label class="sr-only" for="backendSearchInput">Nama atau kode pelanggan</label><input id="backendSearchInput" type="search" minlength="2" maxlength="80" placeholder="Nama atau kode pelanggan" required /><button class="primary" type="submit">Cari di backendv2</button></form>
+              <div id="backendResults" role="status" aria-live="polite"></div>
+              <div id="backendSummary"></div>
+            </section>
           </section>
 
           <section id="inboxView" class="view simple-view">
-            <div class="section-heading"><div><span class="eyebrow">Respons cepat</span><h1>Chat belum dibalas</h1></div></div>
-            <div class="callout"><strong>Aturan prioritas</strong><p>Pesan pelanggan yang masuk dari pukul 20.00 kemarin sampai 10.00 hari ini ditempatkan paling atas dan ikut dihitung dalam batas 20 tugas.</p></div>
+            <div class="section-heading"><div><span class="eyebrow">Kerjakan lebih dulu</span><h1 id="priorityTitle">Chat belum dibalas</h1></div></div>
+            <div class="callout"><strong>Aturan prioritas</strong><p id="priorityHelp">Pesan pelanggan yang masuk dari pukul 22.00 kemarin sampai 09.00 hari ini dan belum dibalas ditempatkan paling atas.</p></div>
             <div id="inboxList" class="task-list"></div>
           </section>
 
           <section id="historyView" class="view simple-view">
-            <div class="section-heading"><div><span class="eyebrow">Aktivitas tim</span><h1>Riwayat hari ini</h1></div><button class="secondary" id="resetButton">Reset data contoh</button></div>
+            <div class="section-heading"><div><span class="eyebrow">Aktivitas tim</span><h1>Riwayat hari ini</h1></div><button class="secondary" id="resetButton">Reset hasil di browser</button></div>
             <div id="historyList" class="history-list"></div>
+          </section>
+
+          <section id="sendView" class="view simple-view">
+            <div class="section-heading"><div><span class="eyebrow">Pengiriman manual · WooBlazz</span><h1>Kirim briefing</h1></div></div>
+            <p class="send-intro">Pilih tim, tinjau isi briefing, lalu salin ke chat tim Anda. Tautan pelanggan di bawah membuka percakapan masing-masing di WooBlazz. Setelah briefing benar-benar terkirim, tekan Konfirmasi untuk mencatatnya di browser ini.</p>
+            <div class="send-tabs" id="sendTabs" role="tablist" aria-label="Penerima briefing">
+              <button type="button" role="tab" id="sendTab-CS" aria-controls="sendPanel" aria-selected="true" data-send-scope="CS">CS pusat <span data-send-status="CS"></span></button>
+              <button type="button" role="tab" id="sendTab-SB" aria-controls="sendPanel" aria-selected="false" data-send-scope="SB">Setiabudi <span data-send-status="SB"></span></button>
+              <button type="button" role="tab" id="sendTab-CITOS" aria-controls="sendPanel" aria-selected="false" data-send-scope="CITOS">CITOS <span data-send-status="CITOS"></span></button>
+              <button type="button" role="tab" id="sendTab-LMP" aria-controls="sendPanel" aria-selected="false" data-send-scope="LMP">LMP <span data-send-status="LMP"></span></button>
+              <button type="button" role="tab" id="sendTab-TSM" aria-controls="sendPanel" aria-selected="false" data-send-scope="TSM">TSM Cibubur <span data-send-status="TSM"></span></button>
+            </div>
+            <div class="send-panel" id="sendPanel" role="tabpanel" aria-labelledby="sendTab-CS">
+              <div class="send-panel-head"><div><h2 id="sendHeading">Briefing CS pusat</h2><p id="sendStatus" role="status" aria-live="polite"></p></div><span id="sendDate"></span></div>
+              <section class="chat-entry" aria-labelledby="chatEntryHeading"><h3 id="chatEntryHeading">Chat belum terbalas dari WooBlazz</h3><p>Periksa percakapan pukul 22.00 kemarin–09.00 hari ini. Masukkan hanya pesan terakhir dari pelanggan yang masih membutuhkan jawaban.</p><form id="chatEntryForm"><input id="chatCustomerName" name="name" aria-label="Nama pelanggan" placeholder="Nama pelanggan" required maxlength="80"><input id="chatCustomerPhone" name="phone" aria-label="Nomor WhatsApp pelanggan" placeholder="Nomor WhatsApp, 08… atau 62…" required inputmode="tel"><input id="chatCustomerTime" name="time" aria-label="Jam pesan" type="time" required><button type="submit" class="secondary">Tambah chat</button></form><div id="chatEntryList"></div></section>
+              <label for="sendMessage">Teks briefing untuk dikirim</label>
+              <textarea id="sendMessage" spellcheck="true"></textarea>
+              <p class="send-hint" id="sendHint">Perubahan teks tersimpan di browser ini untuk hari ini.</p>
+              <div class="send-actions"><button type="button" class="secondary" id="sendCopyButton">Copy briefing</button><button type="button" class="primary" id="sendConfirmButton">Konfirmasi</button></div>
+              <p class="send-footnote">Konfirmasi hanya mencatat status. Aplikasi tidak mengirim WhatsApp secara otomatis.</p>
+              <section class="send-contacts" aria-labelledby="sendContactsHeading"><h3 id="sendContactsHeading">Buka chat pelanggan di WooBlazz</h3><div id="sendContactList"></div></section>
+            </div>
           </section>
         </div>
       </main>
@@ -134,15 +171,20 @@
         <input id="chatInput" autocomplete="off" placeholder="Tanyakan data klinik…" />
         <button type="submit" aria-label="Kirim pertanyaan">Kirim</button>
       </form>
-      <small class="chat-note">Demo lokal · jawaban berasal dari data Customer Book</small>
+      <small class="chat-note">Demo lokal · jawaban berasal dari tugas contoh di layar</small>
     </aside>
     <div class="chat-backdrop" id="chatBackdrop"></div>
     <dialog id="actionDialog">
       <form method="dialog">
         <button class="dialog-close" value="cancel" aria-label="Tutup">×</button>
-        <span class="eyebrow">Catat hasil</span>
+        <span class="eyebrow">Detail tugas</span>
         <h2 id="dialogCustomer">Pelanggan</h2>
-        <p>Pilih hasil percakapan agar daftar besok dapat disusun dengan benar.</p>
+        <p id="dialogReason"></p>
+        <label class="reply-label" for="dialogReply">Contoh balasan untuk pelanggan</label>
+        <textarea id="dialogReply" readonly></textarea>
+        <div class="dialog-tools"><button type="button" class="secondary" id="copyReplyButton">Salin draf balasan</button><button type="button" class="secondary" id="copyTaskLinkButton">Salin tautan tugas</button></div>
+        <p class="dialog-note">Data dan balasan ini contoh. Periksa jadwal, harga, dan paket sebelum mengirim pesan.</p>
+        <p>Catat hasil setelah tugas dikerjakan.</p>
         <div class="outcome-grid">
           <button value="replied" data-outcome="replied">Sudah membalas</button>
           <button value="booked" data-outcome="booked">Berhasil booking</button>
@@ -152,6 +194,6 @@
       </form>
     </dialog>
 
-    <script src="app.js?v=20261012-2"></script>
+    <script src="app-v2.js?v=20261015-9"></script>
   </body>
 </html>
