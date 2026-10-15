@@ -249,7 +249,7 @@ function renderBriefing() {
     html += "</ul></section>";
   });
   const coverage = backend.configured && state.scope === "CS" && backend.coverage ? `<p class="demo-link-note">${backend.coverage.membersChecked} anggota diperiksa; ${backend.coverage.membersFailed} gagal dibaca.</p>` : "";
-  $("#briefingPreview").innerHTML = html + coverage + `<p>${escapeHTML(followUpCheck)}</p><p class="briefing-footer">Catat hasil setelah ditangani supaya pelanggan tidak dihubungi dua kali. Terima kasih! 🌿</p><p class="demo-link-note">Tautan hanya dapat dibuka di perangkat yang menjalankan aplikasi lokal ini. Catatan hasil tersimpan di browser ini saja.</p>`;
+  $("#briefingPreview").innerHTML = html + coverage + `<p>${escapeHTML(followUpCheck)}</p><p class="briefing-footer">Catat hasil setelah ditangani supaya pelanggan tidak dihubungi dua kali. Terima kasih! 🌿</p><p class="demo-link-note">Tautan tugas membuka aplikasi ini. Catatan hasil tersimpan di browser perangkat ini saja.</p>`;
 }
 function card(task, index) {
   const done = isDone(task);
@@ -322,7 +322,7 @@ function render() {
   $("#backendLookup").hidden = !backend.configured;
   $("#refreshDataButton").hidden = !backend.configured;
   $("#refreshDataButton").disabled = backend.loading;
-  $("#modePill").textContent = backend.configured ? "LOKAL · BACKENDV2" : "DEMO LOKAL";
+  $("#modePill").textContent = backend.configured ? "LOKAL · BACKENDV2" : location.hostname === "127.0.0.1" || location.hostname === "localhost" ? "DEMO LOKAL" : "DEMO PUBLIK";
   $("#guideLabel").lastChild.textContent = backend.configured ? " Pemandu briefing backendv2" : " Pemandu briefing demo";
   $(".chat-note").textContent = backend.briefingTasks ? "Jawaban mengikuti daftar tugas backendv2 yang tampil; bukan AI klinis." : liveClinic ? "Jawaban mengikuti daftar appointment backendv2 yang tampil; bukan AI klinis." : "Demo lokal · jawaban berasal dari tugas contoh di layar";
   $(".dialog-note").textContent = backend.configured ? "Data dibaca dari backendv2; draf balasan adalah contoh. Periksa status terbaru dan ketentuan sebelum mengirim." : "Data dan balasan ini contoh. Periksa jadwal, harga, dan paket sebelum mengirim pesan.";
@@ -386,7 +386,7 @@ async function initBackend() {
     backend.configured = status.configured === true;
     render();
     if (backend.configured) { await refreshAppointments(); refreshDailyBriefing(); }
-  } catch { backend.error = "Koneksi lokal backendv2 belum tersedia."; render(); }
+  } catch { backend.error = location.hostname === "127.0.0.1" || location.hostname === "localhost" ? "Koneksi lokal backendv2 belum tersedia." : "Demo publik memakai data contoh; backendv2 hanya tersedia di aplikasi lokal."; render(); }
 }
 async function searchBackendCustomers(event) {
   event.preventDefault();
